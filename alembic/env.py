@@ -8,6 +8,12 @@ from app.modules.roles.role_permissions import RolePermission
 from app.modules.users.models import User
 from app.modules.users.user_roles import UserRole
 from app.modules.accounting_periods.models import AccountingPeriod
+from app.modules.customers.models import Customer
+from app.modules.suppliers.models import Supplier
+from app.modules.projects.models import Project
+from app.modules.cost_centers.models import CostCenter
+
+
 
 
 from alembic import context

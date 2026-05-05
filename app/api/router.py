@@ -5,6 +5,8 @@ from app.modules.companies.router import router as companies_router
 from app.modules.accounting_periods.router import router as accounting_periods_router
 from app.modules.customers.router import router as customers_router
 from app.modules.suppliers.router import router as suppliers_router
+from app.modules.projects.router import router as projects_router
+from app.modules.cost_centers.router import router as cost_centers_router
 
 
 
@@ -15,6 +17,9 @@ api_router.include_router(companies_router)
 api_router.include_router(accounting_periods_router)
 api_router.include_router(customers_router)
 api_router.include_router(suppliers_router)
+api_router.include_router(projects_router)
+api_router.include_router(cost_centers_router)
+
 
 
 @api_router.get("/")
