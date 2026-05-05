@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: constructora_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: constructora_db
+      POSTGRES_USER: constructora_user
+      POSTGRES_PASSWORD: constructora_password
+    ports:
+      - "5544:5432"
+    volumes:
+      - constructora_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  constructora_postgres_data:
