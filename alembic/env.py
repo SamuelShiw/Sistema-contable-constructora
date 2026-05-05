@@ -13,6 +13,7 @@ from app.modules.suppliers.models import Supplier
 from app.modules.projects.models import Project
 from app.modules.cost_centers.models import CostCenter
 from app.modules.chart_accounts.models import ChartAccount
+from app.modules.journal_entries.models import JournalEntry, JournalEntryLine
 
 
 

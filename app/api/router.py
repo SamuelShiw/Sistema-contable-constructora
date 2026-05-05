@@ -8,7 +8,7 @@ from app.modules.suppliers.router import router as suppliers_router
 from app.modules.projects.router import router as projects_router
 from app.modules.cost_centers.router import router as cost_centers_router
 from app.modules.chart_accounts.router import router as chart_accounts_router
-
+from app.modules.journal_entries.router import router as journal_entries_router
 
 
 api_router = APIRouter()
@@ -21,6 +21,7 @@ api_router.include_router(suppliers_router)
 api_router.include_router(projects_router)
 api_router.include_router(cost_centers_router)
 api_router.include_router(chart_accounts_router)
+api_router.include_router(journal_entries_router)
 
 
 @api_router.get("/")
