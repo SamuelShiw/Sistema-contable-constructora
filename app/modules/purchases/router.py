@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.modules.accounts_payable.schemas import AccountPayableResponse
+from app.modules.audit.service import AuditLogService
 from app.modules.purchases.schemas import PurchaseCreate, PurchaseResponse
 from app.modules.purchases.service import PurchaseService
 
@@ -31,6 +32,18 @@ def list_purchases(
 @router.post("/{purchase_id}/approve", response_model=AccountPayableResponse)
 def approve_purchase(
     purchase_id: int,
+    request: Request,
     db: Session = Depends(get_db),
 ) -> AccountPayableResponse:
-    return PurchaseService(db).approve_purchase(purchase_id)
+    account_payable = PurchaseService(db).approve_purchase(purchase_id)
+
+    AuditLogService(db).register(
+        action="PURCHASE_APPROVE",
+        module="PURCHASES",
+        table_name="purchases",
+        record_id=purchase_id,
+        new_data=f"account_payable_id={account_payable.id}",
+        ip_address=request.client.host if request.client else None,
+    )
+
+    return account_payable
