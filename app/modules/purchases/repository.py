@@ -30,6 +30,13 @@ class PurchaseRepository:
             .all()
         )
 
+    def get_by_id(self, purchase_id: int) -> Purchase | None:
+        return (
+            self.db.query(Purchase)
+            .filter(Purchase.id == purchase_id)
+            .first()
+        )
+
     def get_by_document(
         self,
         supplier_id: int,
@@ -43,3 +50,9 @@ class PurchaseRepository:
             )
             .first()
         )
+
+    def save(self, purchase: Purchase) -> Purchase:
+        self.db.add(purchase)
+        self.db.commit()
+        self.db.refresh(purchase)
+        return purchase

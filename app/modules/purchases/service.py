@@ -3,6 +3,8 @@ from decimal import Decimal
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.modules.accounts_payable.models import AccountPayable
+from app.modules.accounts_payable.repository import AccountPayableRepository
 from app.modules.purchases.models import Purchase, PurchaseDetail
 from app.modules.purchases.repository import PurchaseRepository
 from app.modules.purchases.schemas import PurchaseCreate
@@ -14,6 +16,7 @@ IGV_RATE = Decimal("0.18")
 class PurchaseService:
     def __init__(self, db: Session):
         self.repo = PurchaseRepository(db)
+        self.account_payable_repo = AccountPayableRepository(db)
 
     def create_purchase(self, data: PurchaseCreate) -> Purchase:
         existing = self.repo.get_by_document(
@@ -28,7 +31,6 @@ class PurchaseService:
             )
 
         details: list[PurchaseDetail] = []
-
         subtotal = Decimal("0")
 
         for item in data.details:
@@ -66,3 +68,43 @@ class PurchaseService:
 
     def list_purchases(self) -> list[Purchase]:
         return self.repo.get_all()
+
+    def approve_purchase(self, purchase_id: int) -> AccountPayable:
+        purchase = self.repo.get_by_id(purchase_id)
+
+        if purchase is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Compra no encontrada",
+            )
+
+        if purchase.status != "DRAFT":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Solo se pueden aprobar compras en estado DRAFT",
+            )
+
+        existing_account_payable = self.account_payable_repo.get_by_purchase_id(
+            purchase_id=purchase.id,
+        )
+
+        if existing_account_payable is not None:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="La compra ya tiene una cuenta por pagar generada",
+            )
+
+        purchase.status = "APPROVED"
+        self.repo.save(purchase)
+
+        account_payable = AccountPayable(
+            company_id=purchase.company_id,
+            supplier_id=purchase.supplier_id,
+            purchase_id=purchase.id,
+            amount=purchase.total,
+            balance=purchase.total,
+            due_date=purchase.due_date,
+            status="PENDING",
+        )
+
+        return self.account_payable_repo.create(account_payable)
