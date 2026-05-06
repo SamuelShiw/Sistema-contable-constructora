@@ -12,7 +12,7 @@ from app.modules.journal_entries.router import router as journal_entries_router
 from app.modules.purchases.router import router as purchases_router
 from app.modules.accounts_payable.router import router as accounts_payable_router
 from app.modules.treasury.router import router as payments_router
-
+from app.modules.audit.router import router as audit_router
 
 
 api_router = APIRouter()
@@ -29,6 +29,7 @@ api_router.include_router(journal_entries_router)
 api_router.include_router(purchases_router)
 api_router.include_router(accounts_payable_router)
 api_router.include_router(payments_router)
+api_router.include_router(audit_router)
 
 
 @api_router.get("/")
