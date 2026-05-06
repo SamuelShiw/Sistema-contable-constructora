@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session, selectinload
+from sqlalchemy.orm import Session
 
 from app.modules.journal_entries.models import JournalEntry, JournalEntryLine
 
@@ -36,3 +36,9 @@ class JournalEntryRepository:
             .filter(JournalEntry.id == entry_id)
             .first()
         )
+
+    def save(self, entry: JournalEntry) -> JournalEntry:
+        self.db.add(entry)
+        self.db.commit()
+        self.db.refresh(entry)
+        return entry

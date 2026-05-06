@@ -8,14 +8,6 @@ from app.modules.journal_entries.repository import JournalEntryRepository
 from app.modules.journal_entries.schemas import JournalEntryCreate
 
 
-VALID_JOURNAL_STATUSES = {
-    "DRAFT",
-    "POSTED",
-    "REVERSED",
-    "CANCELLED",
-}
-
-
 class JournalEntryService:
     def __init__(self, db: Session):
         self.repo = JournalEntryRepository(db)
@@ -68,3 +60,72 @@ class JournalEntryService:
 
     def list_entries(self) -> list[JournalEntry]:
         return self.repo.get_all()
+
+    def post_entry(self, entry_id: int) -> JournalEntry:
+        entry = self.repo.get_by_id(entry_id)
+
+        if entry is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Asiento contable no encontrado",
+            )
+
+        if entry.status != "DRAFT":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Solo se pueden postear asientos en estado DRAFT",
+            )
+
+        entry.status = "POSTED"
+
+        return self.repo.save(entry)
+
+    def reverse_entry(
+        self,
+        entry_id: int,
+        created_by: int,
+    ) -> JournalEntry:
+        original_entry = self.repo.get_by_id(entry_id)
+
+        if original_entry is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Asiento contable no encontrado",
+            )
+
+        if original_entry.status != "POSTED":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Solo se pueden revertir asientos en estado POSTED",
+            )
+
+        reversal_entry = JournalEntry(
+            company_id=original_entry.company_id,
+            period_id=original_entry.period_id,
+            entry_number=f"{original_entry.entry_number}-REV",
+            entry_date=original_entry.entry_date,
+            description=f"Reversión de asiento {original_entry.entry_number}",
+            status="POSTED",
+            source_module="JOURNAL_REVERSAL",
+            source_id=original_entry.id,
+            created_by=created_by,
+            reversed_entry_id=original_entry.id,
+        )
+
+        reversal_lines = [
+            JournalEntryLine(
+                account_id=line.account_id,
+                cost_center_id=line.cost_center_id,
+                project_id=line.project_id,
+                debit=line.credit,
+                credit=line.debit,
+                description=f"Reversión: {line.description or ''}",
+            )
+            for line in original_entry.lines
+        ]
+
+        original_entry.status = "REVERSED"
+
+        self.repo.save(original_entry)
+
+        return self.repo.create(reversal_entry, reversal_lines)

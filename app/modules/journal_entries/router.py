@@ -34,3 +34,24 @@ def list_entries(
     db: Session = Depends(get_db),
 ) -> list[JournalEntryResponse]:
     return JournalEntryService(db).list_entries()
+
+
+@router.post("/{entry_id}/post", response_model=JournalEntryResponse)
+def post_entry(
+    entry_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> JournalEntryResponse:
+    return JournalEntryService(db).post_entry(entry_id)
+
+
+@router.post("/{entry_id}/reverse", response_model=JournalEntryResponse)
+def reverse_entry(
+    entry_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> JournalEntryResponse:
+    return JournalEntryService(db).reverse_entry(
+        entry_id=entry_id,
+        created_by=current_user.id,
+    )
