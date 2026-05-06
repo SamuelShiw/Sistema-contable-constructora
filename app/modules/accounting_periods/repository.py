@@ -23,6 +23,17 @@ class AccountingPeriodRepository:
             .first()
         )
 
+    def ensure_open_period(self, period_id: int) -> AccountingPeriod:
+        period = self.get_by_id(period_id)
+
+        if period is None:
+            raise ValueError("PERIOD_NOT_FOUND")
+
+        if period.status != "OPEN":
+            raise ValueError("PERIOD_NOT_OPEN")
+
+        return period
+
     def save(self, period: AccountingPeriod) -> AccountingPeriod:
         self.db.add(period)
         self.db.commit()

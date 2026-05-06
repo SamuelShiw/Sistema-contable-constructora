@@ -3,6 +3,7 @@ from decimal import Decimal
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.modules.accounting_periods.repository import AccountingPeriodRepository
 from app.modules.journal_entries.models import JournalEntry, JournalEntryLine
 from app.modules.journal_entries.repository import JournalEntryRepository
 from app.modules.journal_entries.schemas import JournalEntryCreate
@@ -11,12 +12,27 @@ from app.modules.journal_entries.schemas import JournalEntryCreate
 class JournalEntryService:
     def __init__(self, db: Session):
         self.repo = JournalEntryRepository(db)
+        self.period_repo = AccountingPeriodRepository(db)
 
     def create_entry(
         self,
         data: JournalEntryCreate,
         created_by: int,
     ) -> JournalEntry:
+        try:
+            self.period_repo.ensure_open_period(data.period_id)
+        except ValueError as error:
+            if str(error) == "PERIOD_NOT_FOUND":
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Periodo contable no encontrado",
+                )
+
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No se pueden registrar movimientos en un periodo cerrado o bloqueado",
+            )
+
         if len(data.lines) < 2:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -99,6 +115,14 @@ class JournalEntryService:
                 detail="Solo se pueden revertir asientos en estado POSTED",
             )
 
+        try:
+            self.period_repo.ensure_open_period(original_entry.period_id)
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No se pueden revertir asientos de un periodo cerrado o bloqueado",
+            )
+
         reversal_entry = JournalEntry(
             company_id=original_entry.company_id,
             period_id=original_entry.period_id,
@@ -125,7 +149,6 @@ class JournalEntryService:
         ]
 
         original_entry.status = "REVERSED"
-
         self.repo.save(original_entry)
 
         return self.repo.create(reversal_entry, reversal_lines)
