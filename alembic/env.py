@@ -14,6 +14,7 @@ from app.modules.projects.models import Project
 from app.modules.cost_centers.models import CostCenter
 from app.modules.chart_accounts.models import ChartAccount
 from app.modules.journal_entries.models import JournalEntry, JournalEntryLine
+from app.modules.purchases.models import Purchase, PurchaseDetail
 
 
 
