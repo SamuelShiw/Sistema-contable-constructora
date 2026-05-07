@@ -1,6 +1,21 @@
-.venv/
-.env
-__pycache__/
+# Python
+backend-contable/.venv/
+backend-contable/__pycache__/
+backend-contable/.pytest_cache/
+**/__pycache__/
 *.pyc
+
+# Node
+frontend-contable/node_modules/
+frontend-contable/dist/
+
+# Env
+*.env
+.env
+
+# VS Code
 .vscode/
-.idea/
+
+# OS
+Thumbs.db
+.DS_Store
