@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     database_name: str
     database_user: str
     database_password: str
+    database_url_env: str | None = None
 
     jwt_secret_key: str
     jwt_algorithm: str
@@ -26,12 +27,16 @@ class Settings(BaseSettings):
 
     @property
     def database_url(self) -> str:
+        database_url = getattr(self, "database_url_env", None)
+
+        if database_url:
+            return database_url
+
         return (
             f"postgresql+psycopg://{self.database_user}:"
             f"{self.database_password}@{self.database_host}:"
             f"{self.database_port}/{self.database_name}"
         )
-
 
 @lru_cache
 def get_settings() -> Settings:

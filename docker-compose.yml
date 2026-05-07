@@ -2,15 +2,43 @@ services:
   postgres:
     image: postgres:16
     container_name: constructora_postgres
-    restart: unless-stopped
+
     environment:
       POSTGRES_DB: constructora_db
       POSTGRES_USER: constructora_user
       POSTGRES_PASSWORD: constructora_password
+
     ports:
       - "5544:5432"
+
     volumes:
-      - constructora_postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build: .
+
+    container_name: constructora_backend
+
+    depends_on:
+      - postgres
+
+    ports:
+      - "8000:8000"
+
+    environment:
+      DATABASE_URL_ENV: postgresql+psycopg://constructora_user:constructora_password@postgres:5432/constructora_db
+      SECRET_KEY: super-secret-key
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 30
+
+    volumes:
+      - .:/app
+
+    command: >
+      sh -c "
+      alembic upgrade head &&
+      uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+      "
 
 volumes:
-  constructora_postgres_data:
+  postgres_data:
