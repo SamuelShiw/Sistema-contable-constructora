@@ -15,6 +15,9 @@ from app.modules.treasury.router import router as payments_router
 from app.modules.audit.router import router as audit_router
 from app.modules.reports.router import router as reports_router
 from app.modules.dashboard.router import router as dashboard_router
+from app.modules.exports.router import router as exports_router
+
+
 
 api_router = APIRouter()
 
@@ -33,7 +36,7 @@ api_router.include_router(payments_router)
 api_router.include_router(audit_router)
 api_router.include_router(reports_router)
 api_router.include_router(dashboard_router)
-
+api_router.include_router(exports_router)
 
 @api_router.get("/")
 def root() -> dict[str, str]:

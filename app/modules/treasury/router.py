@@ -5,6 +5,8 @@ from app.core.database import get_db
 from app.modules.audit.service import AuditLogService
 from app.modules.treasury.schemas import PaymentCreate, PaymentResponse
 from app.modules.treasury.service import PaymentService
+from app.core.permissions import require_roles
+from app.modules.users.models import User
 
 
 router = APIRouter(
@@ -18,6 +20,7 @@ def create_payment(
     payload: PaymentCreate,
     request: Request,
     db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles(["TREASURY"])),
 ) -> PaymentResponse:
     payment = PaymentService(db).create_payment(payload)
 

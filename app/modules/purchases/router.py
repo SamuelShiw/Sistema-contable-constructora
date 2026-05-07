@@ -6,6 +6,8 @@ from app.modules.accounts_payable.schemas import AccountPayableResponse
 from app.modules.audit.service import AuditLogService
 from app.modules.purchases.schemas import PurchaseCreate, PurchaseResponse
 from app.modules.purchases.service import PurchaseService
+from app.core.permissions import require_roles
+from app.modules.users.models import User
 
 
 router = APIRouter(
@@ -34,6 +36,7 @@ def approve_purchase(
     purchase_id: int,
     request: Request,
     db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles(["ACCOUNTANT"])),
 ) -> AccountPayableResponse:
     account_payable = PurchaseService(db).approve_purchase(purchase_id)
 

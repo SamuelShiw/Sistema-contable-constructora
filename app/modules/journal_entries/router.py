@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
+from app.core.permissions import require_roles
 
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
@@ -23,7 +24,7 @@ def create_entry(
     payload: JournalEntryCreate,
     request: Request,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles(["ACCOUNTANT"])),
 ) -> JournalEntryResponse:
     entry = JournalEntryService(db).create_entry(
         data=payload,
@@ -55,7 +56,7 @@ def post_entry(
     entry_id: int,
     request: Request,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles(["ACCOUNTANT"])),
 ) -> JournalEntryResponse:
     entry = JournalEntryService(db).post_entry(entry_id)
 
@@ -77,7 +78,7 @@ def reverse_entry(
     entry_id: int,
     request: Request,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles(["ACCOUNTANT"])),
 ) -> JournalEntryResponse:
     reversal = JournalEntryService(db).reverse_entry(
         entry_id=entry_id,
